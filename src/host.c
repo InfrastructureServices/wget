@@ -1024,7 +1024,10 @@ sufmatch (const char **list, const char *what)
   for (i = 0; list[i]; i++)
     {
       j = strlen (list[i]);
-      if (lw < j)
+      /* Ignore leftmost dot from length in case of dot-prefixed subdomain
+       * in list[i] and lenght mismatch with what of size 1 (the leftmost dot)
+       * */
+      if (!(lw == j-1 && list[i][0] == '.') && lw < j)
         continue; /* what is no (sub)domain of list[i] */
 
       for (k = lw; j >= 0 && k >= 0; j--, k--)
@@ -1037,6 +1040,12 @@ sufmatch (const char **list, const char *what)
        * k >= 0 && list[i][0] == '.': dot-prefixed subdomain match
        */
       if (j == -1 && (k == -1 || what[k] == '.' || list[i][0] == '.'))
+        return true;
+
+      /* Exact domain match, except for leftmost dot in list[i]
+       * example: what = "mit.edu" and list[i] = ".mit.edu"
+       */
+      if (j == 0 && k == -1 && list[i][0] == '.')
         return true;
     }
 
